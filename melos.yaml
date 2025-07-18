@@ -1,0 +1,163 @@
+name: ai_powered_task_manager_monorepo
+
+repository: https://github.com/erlin/ai_powered_task_manager_monorepo
+
+packages:
+  - apps/*
+  - packages/*
+
+scripts:
+  # 基础命令
+  bootstrap:
+    description: 安装所有依赖
+    run: melos exec -c 1 "flutter pub get"
+    packageFilters:
+      ignore:
+        - "**/build/**"
+        - "**/.dart_tool/**"
+
+  clean:
+    description: 清理所有构建文件
+    run: melos exec -c 1 "flutter clean"
+    packageFilters:
+      ignore:
+        - "**/build/**"
+        - "**/.dart_tool/**"
+
+  analyze:
+    description: 代码分析
+    run: melos exec -c 1 "flutter analyze"
+    packageFilters:
+      ignore:
+        - "**/build/**"
+        - "**/.dart_tool/**"
+
+  test:
+    description: 运行所有测试
+    run: melos exec -c 1 "flutter test"
+    packageFilters:
+      ignore:
+        - "**/build/**"
+        - "**/.dart_tool/**"
+
+  # 代码生成
+  codegen:
+    description: 生成代码
+    run: melos exec -c 1 "flutter packages pub run build_runner build --delete-conflicting-outputs"
+    packageFilters:
+      scope:
+        - "firebase_auth_kit"
+
+  # 构建命令
+  build:web:
+    description: 构建Web版本
+    run: melos exec -c 1 "flutter build web --release"
+    packageFilters:
+      scope:
+        - "ai_powered_task_manager"
+
+  build:android:
+    description: 构建Android版本
+    run: melos exec -c 1 "flutter build apk --release"
+    packageFilters:
+      scope:
+        - "ai_powered_task_manager"
+
+  build:ios:
+    description: 构建iOS版本
+    run: melos exec -c 1 "flutter build ios --release"
+    packageFilters:
+      scope:
+        - "ai_powered_task_manager"
+
+  # 开发命令
+  dev:web:
+    description: 启动Web开发服务器
+    run: melos exec -c 1 "flutter run -d web-server --web-port 3000"
+    packageFilters:
+      scope:
+        - "ai_powered_task_manager"
+
+  dev:android:
+    description: 启动Android开发
+    run: melos exec -c 1 "flutter run"
+    packageFilters:
+      scope:
+        - "ai_powered_task_manager"
+
+  dev:ios:
+    description: 启动iOS开发
+    run: melos exec -c 1 "flutter run"
+    packageFilters:
+      scope:
+        - "ai_powered_task_manager"
+
+  # 发布命令
+  pub:publish:
+    description: 发布firebase_auth_kit到pub.dev
+    run: melos exec -c 1 "flutter packages pub publish --dry-run"
+    packageFilters:
+      scope:
+        - "firebase_auth_kit"
+
+  # 依赖管理
+  deps:check:
+    description: 检查依赖更新
+    run: melos exec -c 1 "flutter packages pub outdated"
+
+  deps:upgrade:
+    description: 升级依赖
+    run: melos exec -c 1 "flutter packages pub upgrade"
+
+  # 代码质量
+  lint:
+    description: 运行代码检查
+    run: melos exec -c 1 "flutter packages pub run dart_code_metrics:metrics analyze lib"
+    packageFilters:
+      ignore:
+        - "**/build/**"
+        - "**/.dart_tool/**"
+
+  format:
+    description: 格式化代码
+    run: melos exec -c 1 "dart format ."
+
+  # 文档生成
+  docs:generate:
+    description: 生成文档
+    run: melos exec -c 1 "flutter packages pub run dartdoc"
+    packageFilters:
+      scope:
+        - "firebase_auth_kit"
+
+  # 版本管理
+  version:bump:
+    description: 版本号管理
+    run: melos version
+
+  # 工作流命令
+  workflow:ci:
+    description: CI/CD工作流
+    run: |
+      melos bootstrap
+      melos analyze
+      melos test
+      melos lint
+    packageFilters:
+      ignore:
+        - "**/build/**"
+        - "**/.dart_tool/**"
+
+  workflow:prepublish:
+    description: 发布前准备
+    run: |
+      melos clean
+      melos bootstrap
+      melos codegen
+      melos test
+      melos analyze
+      melos lint
+    packageFilters:
+      ignore:
+        - "**/build/**"
+        - "**/.dart_tool/**" 

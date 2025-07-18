@@ -1,0 +1,10 @@
+name: ai_powered_task_manager_monorepo
+description: AI驱动的任务管理应用Monorepo
+version: 0.0.1
+
+environment:
+  sdk: '>=3.4.3 <4.0.0'
+  flutter: ">=1.17.0"
+
+dev_dependencies:
+  melos: ^3.4.0 
