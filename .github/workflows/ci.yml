@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.0'
+        channel: 'stable'
+    
+    - name: Install Melos
+      run: dart pub global activate melos
+    
+    - name: Bootstrap dependencies
+      run: melos bootstrap
+    
+    - name: Analyze code
+      run: melos analyze
+    
+    - name: Run tests
+      run: melos test
+    
+    - name: Build for web
+      run: melos build --scope=ai_powered_task_manager --platform=web
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.0'
+        channel: 'stable'
+    
+    - name: Install Melos
+      run: dart pub global activate melos
+    
+    - name: Bootstrap dependencies
+      run: melos bootstrap
+    
+    - name: Build for all platforms
+      run: melos build 
