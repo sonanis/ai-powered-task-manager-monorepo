@@ -3,13 +3,22 @@ import 'package:firebase_core/firebase_core.dart';
 import '../config/auth_platform_config.dart';
 import '../config/auth_config_manager.dart';
 import '../platform/platform_detector.dart';
+import 'providers/google_sign_in_provider.dart';
 
-/// Firebase认证服务
+/// Firebase认证服务 / Firebase Authentication Service
 class FirebaseAuthService {
   static FirebaseAuthService? _instance;
   static FirebaseAuthService get instance => _instance ??= FirebaseAuthService._();
   
+  /// Google 登录提供者 / Google Sign-In Provider
+  GoogleSignInProvider? _googleProvider;
+  
   FirebaseAuthService._();
+  
+  /// 设置 Google 登录提供者 / Set Google Sign-In Provider
+  void setGoogleProvider(GoogleSignInProvider provider) {
+    _googleProvider = provider;
+  }
 
   FirebaseAuth get _auth => FirebaseAuth.instance;
   
@@ -70,37 +79,34 @@ class FirebaseAuthService {
     }
   }
 
-  /// Google登录
+  /// Google登录 / Sign in with Google
   Future<UserCredential?> signInWithGoogle({
     required GoogleAuthConfig config,
   }) async {
     try {
       if (!PlatformDetector.supportsFeature('google_sign_in')) {
-        throw Exception('当前平台不支持Google登录');
+        throw Exception('当前平台不支持Google登录 / Current platform does not support Google sign-in');
       }
 
-      // 创建Google认证凭据
-      final googleUser = await _getGoogleUser();
+      if (_googleProvider == null) {
+        throw Exception('Google登录提供者未设置，请先调用 setGoogleProvider() / Google sign-in provider not set, please call setGoogleProvider() first');
+      }
+
+      // 执行Google登录 / Perform Google sign-in
+      final googleUser = await _googleProvider!.signIn();
       if (googleUser == null) return null;
 
-      final googleAuth = await googleUser.authentication;
+      // 创建Firebase认证凭据 / Create Firebase authentication credential
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+        accessToken: googleUser.accessToken,
+        idToken: googleUser.idToken,
       );
 
       return await _auth.signInWithCredential(credential);
     } catch (e) {
-      print('Google登录失败: $e');
+      print('Google登录失败 / Google sign-in failed: $e');
       rethrow;
     }
-  }
-
-  /// 获取Google用户（平台特定实现）
-  Future<dynamic> _getGoogleUser() async {
-    // 这里需要根据平台实现具体的Google登录
-    // 在实际应用中，您需要集成 google_sign_in 插件
-    throw UnimplementedError('需要集成 google_sign_in 插件');
   }
 
   /// Facebook登录

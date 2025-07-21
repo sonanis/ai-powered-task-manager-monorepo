@@ -11,6 +11,16 @@ export 'src/platform/platform_detector.dart';
 // 导出认证服务
 export 'src/auth/firebase_auth_service.dart';
 
+// 导出数据模型
+export 'src/models/auth_models.dart';
+
+// 导出状态管理
+export 'src/providers/auth_provider.dart';
+
+// 导出认证提供者
+export 'src/auth/providers/google_sign_in_provider.dart';
+export 'src/auth/providers/default_google_sign_in_provider.dart';
+
 /// Firebase Auth Kit 主类
 class FirebaseAuthKit {
   /// 初始化Firebase Auth Kit
