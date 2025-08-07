@@ -1,0 +1,22 @@
+# 项目示例别名记录
+
+## 示例项目命名规范
+
+### Firebase Auth Kit 示例
+- **路径**: `packages/firebase_auth_kit/example/`
+- **别名**: `firebase_example`、`firebase example`
+- **用途**: 演示 Firebase Auth Kit 的使用，包括 Google 登录等功能
+
+### GitHub Auth Kit 示例  
+- **路径**: `packages/firebase_auth_kit/example/`
+- **别名**: `oauth_example`、`github example`
+- **用途**: 演示 GitHub OAuth 2.0 认证流程
+
+## 注意事项
+- 这些别名仅用于项目内部识别，不改变实际文件结构
+- 在文档和对话中可以使用别名来区分不同的示例项目
+- 实际开发时仍使用原始路径
+description:
+globs:
+alwaysApply: false
+---

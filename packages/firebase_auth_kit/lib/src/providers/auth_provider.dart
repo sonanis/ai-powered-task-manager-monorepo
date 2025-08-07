@@ -5,50 +5,68 @@ import '../auth/firebase_auth_service.dart';
 import '../config/auth_platform_config.dart';
 import '../models/auth_models.dart';
 
-/// 创建认证Provider / Create authentication provider
-ChangeNotifierProvider<AuthNotifier> createAuthProvider() {
-  return ChangeNotifierProvider<AuthNotifier>(
-    create: (context) => AuthNotifier(),
-  );
-}
-
-/// 认证状态管理器 / Authentication State Manager
-class AuthNotifier extends ChangeNotifier {
+/// 认证状态提供者 / Authentication State Provider
+/// 
+/// 使用 Provider 模式管理认证状态
+/// Uses Provider pattern to manage authentication state
+class AuthProvider extends ChangeNotifier {
+  /// 当前认证状态 / Current authentication state
   AuthState _state = const AuthState();
+  
+  /// 获取当前状态 / Get current state
   AuthState get state => _state;
+  
+  /// 获取当前用户 / Get current user
+  User? get currentUser => _state.user;
+  
+  /// 获取认证状态 / Get authentication status
+  UserStatus get status => _state.status;
+  
+  /// 获取是否正在加载 / Get loading state
+  bool get isLoading => _state.isLoading;
+  
+  /// 获取错误信息 / Get error message
+  AuthError? get error => _state.error;
+  
+  /// 获取当前登录提供者 / Get current provider
+  String? get provider => _state.provider;
 
-  AuthNotifier() {
-    // 监听Firebase认证状态变化 / Listen to Firebase auth state changes
-    _listenToAuthChanges();
+  AuthProvider() {
+    // 监听 Firebase Auth 状态变化
+    FirebaseAuthService.instance.authStateChanges.listen(_onAuthStateChanged);
   }
 
-  /// 监听认证状态变化 / Listen to authentication state changes
-  void _listenToAuthChanges() {
-    FirebaseAuthService.instance.authStateChanges.listen((firebaseUser) {
-      if (firebaseUser != null) {
-        // 用户已登录 / User is logged in
-        _updateState(_state.copyWith(
-          status: UserStatus.authenticated,
-          user: firebaseUser,
-          error: null,
-          isLoading: false,
-        ));
-      } else {
-        // 用户未登录 / User is not logged in
-        _updateState(_state.copyWith(
-          status: UserStatus.unauthenticated,
-          user: null,
-          error: null,
-          isLoading: false,
-        ));
-      }
-    });
+  /// 处理认证状态变化 / Handle authentication state changes
+  void _onAuthStateChanged(User? user) {
+    if (user != null) {
+      _updateState(_state.copyWith(
+        user: user,
+        status: UserStatus.authenticated,
+        isLoading: false,
+        error: null,
+      ));
+    } else {
+      _updateState(_state.copyWith(
+        user: null,
+        status: UserStatus.unauthenticated,
+        isLoading: false,
+        error: null,
+      ));
+    }
   }
 
-  /// 更新状态并通知监听器 / Update state and notify listeners
+  /// 更新状态 / Update state
   void _updateState(AuthState newState) {
     _state = newState;
     notifyListeners();
+  }
+
+  /// 处理认证错误 / Handle authentication errors
+  AuthError _handleAuthError(dynamic error) {
+    if (error is FirebaseAuthException) {
+      return AuthError.fromFirebaseException(error);
+    }
+    return AuthError.fromException(error);
   }
 
   /// 邮箱密码登录 / Sign in with email and password
@@ -157,23 +175,19 @@ class AuthNotifier extends ChangeNotifier {
     }
   }
 
-  /// 手机号登录 / Sign in with phone number
-  Future<void> signInWithPhone({
-    required String phoneNumber,
-    required PhoneAuthConfig config,
+  /// GitHub登录 / Sign in with GitHub
+  Future<void> signInWithGitHub({
+    required GitHubAuthConfig config,
   }) async {
     try {
       _updateState(_state.copyWith(
         status: UserStatus.authenticating,
         isLoading: true,
         error: null,
-        provider: 'phone',
+        provider: 'github',
       ));
 
-      await FirebaseAuthService.instance.signInWithPhoneNumber(
-        phoneNumber: phoneNumber,
-        config: config,
-      );
+      await FirebaseAuthService.instance.signInWithGitHub(config: config);
 
       // 状态更新由监听器处理 / State update handled by listener
     } catch (e) {
@@ -212,8 +226,13 @@ class AuthNotifier extends ChangeNotifier {
   /// 退出登录 / Sign out
   Future<void> signOut() async {
     try {
-      _updateState(_state.copyWith(isLoading: true));
+      _updateState(_state.copyWith(
+        isLoading: true,
+        error: null,
+      ));
+
       await FirebaseAuthService.instance.signOut();
+
       // 状态更新由监听器处理 / State update handled by listener
     } catch (e) {
       final error = _handleAuthError(e);
@@ -227,8 +246,79 @@ class AuthNotifier extends ChangeNotifier {
   /// 删除账户 / Delete account
   Future<void> deleteAccount() async {
     try {
-      _updateState(_state.copyWith(isLoading: true));
-      await FirebaseAuthService.instance.deleteAccount();
+      _updateState(_state.copyWith(
+        isLoading: true,
+        error: null,
+      ));
+
+      await FirebaseAuthService.instance.deleteUser();
+
+      // 状态更新由监听器处理 / State update handled by listener
+    } catch (e) {
+      final error = _handleAuthError(e);
+      _updateState(_state.copyWith(
+        error: error,
+        isLoading: false,
+      ));
+    }
+  }
+
+  /// 更新用户资料 / Update user profile
+  Future<void> updateProfile({
+    String? displayName,
+    String? photoURL,
+  }) async {
+    try {
+      _updateState(_state.copyWith(
+        isLoading: true,
+        error: null,
+      ));
+
+      await FirebaseAuthService.instance.updateUserProfile(
+        displayName: displayName,
+        photoURL: photoURL,
+      );
+
+      // 状态更新由监听器处理 / State update handled by listener
+    } catch (e) {
+      final error = _handleAuthError(e);
+      _updateState(_state.copyWith(
+        error: error,
+        isLoading: false,
+      ));
+    }
+  }
+
+  /// 更新邮箱 / Update email
+  Future<void> updateEmail(String email) async {
+    try {
+      _updateState(_state.copyWith(
+        isLoading: true,
+        error: null,
+      ));
+
+      await FirebaseAuthService.instance.updateEmail(email);
+
+      // 状态更新由监听器处理 / State update handled by listener
+    } catch (e) {
+      final error = _handleAuthError(e);
+      _updateState(_state.copyWith(
+        error: error,
+        isLoading: false,
+      ));
+    }
+  }
+
+  /// 更新密码 / Update password
+  Future<void> updatePassword(String password) async {
+    try {
+      _updateState(_state.copyWith(
+        isLoading: true,
+        error: null,
+      ));
+
+      await FirebaseAuthService.instance.updatePassword(password);
+
       // 状态更新由监听器处理 / State update handled by listener
     } catch (e) {
       final error = _handleAuthError(e);
@@ -242,30 +332,16 @@ class AuthNotifier extends ChangeNotifier {
   /// 发送密码重置邮件 / Send password reset email
   Future<void> sendPasswordResetEmail(String email) async {
     try {
-      _updateState(_state.copyWith(isLoading: true));
-      await FirebaseAuthService.instance.sendPasswordResetEmail(email);
-      _updateState(_state.copyWith(isLoading: false));
-    } catch (e) {
-      final error = _handleAuthError(e);
       _updateState(_state.copyWith(
-        error: error,
+        isLoading: true,
+        error: null,
+      ));
+
+      await FirebaseAuthService.instance.sendPasswordResetEmail(email);
+
+      _updateState(_state.copyWith(
         isLoading: false,
       ));
-    }
-  }
-
-  /// 更新用户资料 / Update user profile
-  Future<void> updateUserProfile({
-    String? displayName,
-    String? photoURL,
-  }) async {
-    try {
-      _updateState(_state.copyWith(isLoading: true));
-      await FirebaseAuthService.instance.updateUserProfile(
-        displayName: displayName,
-        photoURL: photoURL,
-      );
-      // 状态更新由监听器处理 / State update handled by listener
     } catch (e) {
       final error = _handleAuthError(e);
       _updateState(_state.copyWith(
@@ -280,12 +356,18 @@ class AuthNotifier extends ChangeNotifier {
     _updateState(_state.copyWith(error: null));
   }
 
-  /// 处理认证错误 / Handle authentication error
-  AuthError _handleAuthError(dynamic error) {
-    if (error is FirebaseAuthException) {
-      return AuthError.fromFirebaseException(error);
-    } else {
-      return AuthError.fromException(error);
-    }
+  /// 重置状态 / Reset state
+  void reset() {
+    _updateState(const AuthState());
   }
+}
+
+/// 创建认证Provider / Create authentication provider
+/// 
+/// 便利函数，用于快速创建 AuthProvider 的 ChangeNotifierProvider
+/// Convenience function for quickly creating a ChangeNotifierProvider for AuthProvider
+ChangeNotifierProvider<AuthProvider> createAuthProvider() {
+  return ChangeNotifierProvider<AuthProvider>(
+    create: (context) => AuthProvider(),
+  );
 } 

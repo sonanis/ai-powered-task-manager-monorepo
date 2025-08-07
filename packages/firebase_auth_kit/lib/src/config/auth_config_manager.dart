@@ -1,4 +1,5 @@
 import 'auth_platform_config.dart';
+import '../core/logger.dart';
 
 /// 认证配置管理器
 class AuthConfigManager {
@@ -109,43 +110,42 @@ class AuthConfigManager {
 
       return true;
     } catch (e) {
-      print('配置验证失败: $e');
+      Log.e('配置验证失败 / Configuration validation failed', error: e);
       return false;
     }
   }
 
   /// 获取特定平台的配置
   T? getPlatformConfig<T>() {
-    switch (T) {
-      case GoogleAuthConfig:
-        return _config.google as T?;
-      case FacebookAuthConfig:
-        return _config.facebook as T?;
-      case AppleAuthConfig:
-        return _config.apple as T?;
-      case TwitterAuthConfig:
-        return _config.twitter as T?;
-      case GitHubAuthConfig:
-        return _config.github as T?;
-      case MicrosoftAuthConfig:
-        return _config.microsoft as T?;
-      case YahooAuthConfig:
-        return _config.yahoo as T?;
-      case LinkedInAuthConfig:
-        return _config.linkedin as T?;
-      case EmailPasswordAuthConfig:
-        return _config.emailPassword as T?;
-      case PhoneAuthConfig:
-        return _config.phone as T?;
-      case AnonymousAuthConfig:
-        return _config.anonymous as T?;
-      case SAMLAuthConfig:
-        return _config.saml as T?;
-      case OIDCAuthConfig:
-        return _config.oidc as T?;
-      default:
-        return null;
+    // 使用类型检查而不是 switch 模式匹配
+    if (T == GoogleAuthConfig) {
+      return _config.google as T?;
+    } else if (T == FacebookAuthConfig) {
+      return _config.facebook as T?;
+    } else if (T == AppleAuthConfig) {
+      return _config.apple as T?;
+    } else if (T == TwitterAuthConfig) {
+      return _config.twitter as T?;
+    } else if (T == GitHubAuthConfig) {
+      return _config.github as T?;
+    } else if (T == MicrosoftAuthConfig) {
+      return _config.microsoft as T?;
+    } else if (T == YahooAuthConfig) {
+      return _config.yahoo as T?;
+    } else if (T == LinkedInAuthConfig) {
+      return _config.linkedin as T?;
+    } else if (T == EmailPasswordAuthConfig) {
+      return _config.emailPassword as T?;
+    } else if (T == PhoneAuthConfig) {
+      return _config.phone as T?;
+    } else if (T == AnonymousAuthConfig) {
+      return _config.anonymous as T?;
+    } else if (T == SAMLAuthConfig) {
+      return _config.saml as T?;
+    } else if (T == OIDCAuthConfig) {
+      return _config.oidc as T?;
     }
+    return null;
   }
 
   /// 检查平台是否启用

@@ -20,6 +20,15 @@ export 'src/providers/auth_provider.dart';
 // 导出认证提供者
 export 'src/auth/providers/google_sign_in_provider.dart';
 export 'src/auth/providers/default_google_sign_in_provider.dart';
+export 'src/auth/providers/facebook_sign_in_provider.dart';
+export 'src/auth/providers/default_facebook_sign_in_provider.dart';
+export 'src/auth/providers/github_sign_in_provider.dart';
+
+// 导出日志系统
+export 'src/core/logger.dart';
+
+// 导出 Provider 相关类型（方便用户使用）
+export 'package:provider/provider.dart';
 
 /// Firebase Auth Kit 主类
 class FirebaseAuthKit {
@@ -35,9 +44,9 @@ class FirebaseAuthKit {
   static List<String> get supportedPlatforms => [
     'google',
     'facebook', 
+    'github',
     'apple',
     'twitter',
-    'github',
     'microsoft',
     'yahoo',
     'linkedin',

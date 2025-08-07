@@ -3,7 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import '../config/auth_platform_config.dart';
 import '../config/auth_config_manager.dart';
 import '../platform/platform_detector.dart';
+import '../core/logger.dart';
 import 'providers/google_sign_in_provider.dart';
+import 'providers/facebook_sign_in_provider.dart';
+import 'providers/github_sign_in_provider.dart';
 
 /// Firebase认证服务 / Firebase Authentication Service
 class FirebaseAuthService {
@@ -13,11 +16,27 @@ class FirebaseAuthService {
   /// Google 登录提供者 / Google Sign-In Provider
   GoogleSignInProvider? _googleProvider;
   
+  /// Facebook 登录提供者 / Facebook Sign-In Provider
+  FacebookSignInProvider? _facebookProvider;
+  
+  /// GitHub 登录提供者 / GitHub Sign-In Provider
+  GitHubSignInProvider? _githubProvider;
+  
   FirebaseAuthService._();
   
   /// 设置 Google 登录提供者 / Set Google Sign-In Provider
   void setGoogleProvider(GoogleSignInProvider provider) {
     _googleProvider = provider;
+  }
+  
+  /// 设置 Facebook 登录提供者 / Set Facebook Sign-In Provider
+  void setFacebookProvider(FacebookSignInProvider provider) {
+    _facebookProvider = provider;
+  }
+  
+  /// 设置 GitHub 登录提供者 / Set GitHub Sign-In Provider
+  void setGitHubProvider(GitHubSignInProvider provider) {
+    _githubProvider = provider;
   }
 
   FirebaseAuth get _auth => FirebaseAuth.instance;
@@ -50,36 +69,13 @@ class FirebaseAuthService {
     await _enablePlatformAuthMethods(config);
   }
 
-  /// 根据平台启用认证方式
+  /// 启用平台认证方式
   static Future<void> _enablePlatformAuthMethods(FirebaseAuthConfig config) async {
-    final platform = PlatformDetector.currentPlatform;
-    
-    // 根据平台启用相应的认证方式
-    switch (platform) {
-      case PlatformType.android:
-      case PlatformType.ios:
-        // 移动平台支持所有认证方式
-        break;
-      case PlatformType.web:
-        // Web平台不支持Apple登录
-        if (config.apple?.isEnabled == true) {
-          print('警告: Web平台不支持Apple登录');
-        }
-        break;
-      case PlatformType.windows:
-      case PlatformType.macos:
-      case PlatformType.linux:
-        // 桌面平台限制某些认证方式
-        if (config.apple?.isEnabled == true && platform != PlatformType.macos) {
-          print('警告: 非macOS桌面平台不支持Apple登录');
-        }
-        break;
-      default:
-        break;
-    }
+    // 这里可以根据配置启用相应的认证方式
+    // 目前主要是配置验证，具体的认证逻辑由提供者实现
   }
 
-  /// Google登录 / Sign in with Google
+  /// Google登录
   Future<UserCredential?> signInWithGoogle({
     required GoogleAuthConfig config,
   }) async {
@@ -104,7 +100,7 @@ class FirebaseAuthService {
 
       return await _auth.signInWithCredential(credential);
     } catch (e) {
-      print('Google登录失败 / Google sign-in failed: $e');
+      Log.e('Google登录失败 / Google sign-in failed', error: e);
       rethrow;
     }
   }
@@ -115,14 +111,54 @@ class FirebaseAuthService {
   }) async {
     try {
       if (!PlatformDetector.supportsFeature('facebook_sign_in')) {
-        throw Exception('当前平台不支持Facebook登录');
+        throw Exception('当前平台不支持Facebook登录 / Current platform does not support Facebook sign-in');
       }
 
-      // 这里需要根据平台实现具体的Facebook登录
-      // 在实际应用中，您需要集成 flutter_facebook_auth 插件
-      throw UnimplementedError('需要集成 flutter_facebook_auth 插件');
+      if (_facebookProvider == null) {
+        throw Exception('Facebook登录提供者未设置，请先调用 setFacebookProvider() / Facebook sign-in provider not set, please call setFacebookProvider() first');
+      }
+
+      // 执行Facebook登录 / Perform Facebook sign-in
+      final facebookUser = await _facebookProvider!.signIn();
+      if (facebookUser == null) return null;
+
+      // 创建Firebase认证凭据 / Create Firebase authentication credential
+      final credential = FacebookAuthProvider.credential(
+        facebookUser.accessToken!,
+      );
+
+      return await _auth.signInWithCredential(credential);
     } catch (e) {
-      print('Facebook登录失败: $e');
+      Log.e('Facebook登录失败 / Facebook sign-in failed', error: e);
+      rethrow;
+    }
+  }
+
+  /// GitHub登录
+  Future<UserCredential?> signInWithGitHub({
+    required GitHubAuthConfig config,
+  }) async {
+    try {
+      if (!PlatformDetector.supportsFeature('github_sign_in')) {
+        throw Exception('当前平台不支持GitHub登录 / Current platform does not support GitHub sign-in');
+      }
+
+      if (_githubProvider == null) {
+        throw Exception('GitHub登录提供者未设置，请先调用 setGitHubProvider() / GitHub sign-in provider not set, please call setGitHubProvider() first');
+      }
+
+      // 执行GitHub登录 / Perform GitHub sign-in
+      final githubUser = await _githubProvider!.signIn();
+      if (githubUser == null) return null;
+
+      // 创建Firebase认证凭据 / Create Firebase authentication credential
+      final credential = GithubAuthProvider.credential(
+        githubUser.accessToken!,
+      );
+
+      return await _auth.signInWithCredential(credential);
+    } catch (e) {
+      Log.e('GitHub登录失败 / GitHub sign-in failed', error: e);
       rethrow;
     }
   }
@@ -140,7 +176,7 @@ class FirebaseAuthService {
       // 在实际应用中，您需要集成 sign_in_with_apple 插件
       throw UnimplementedError('需要集成 sign_in_with_apple 插件');
     } catch (e) {
-      print('Apple登录失败: $e');
+      Log.e('Apple登录失败 / Apple sign-in failed', error: e);
       rethrow;
     }
   }
@@ -156,7 +192,7 @@ class FirebaseAuthService {
         password: password,
       );
     } catch (e) {
-      print('邮箱密码登录失败: $e');
+      Log.e('邮箱密码登录失败 / Email password sign-in failed', error: e);
       rethrow;
     }
   }
@@ -172,61 +208,7 @@ class FirebaseAuthService {
         password: password,
       );
     } catch (e) {
-      print('邮箱密码注册失败: $e');
-      rethrow;
-    }
-  }
-
-  /// 手机号登录
-  Future<UserCredential?> signInWithPhoneNumber({
-    required String phoneNumber,
-    required PhoneAuthConfig config,
-  }) async {
-    try {
-      if (!PlatformDetector.supportsFeature('phone_auth')) {
-        throw Exception('当前平台不支持手机号登录');
-      }
-
-      // 发送验证码
-      await _auth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await _auth.signInWithCredential(credential);
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          print('验证码发送失败: ${e.message}');
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          // 这里需要处理验证码发送成功的情况
-          // 在实际应用中，您需要显示验证码输入界面
-          print('验证码已发送到: $phoneNumber');
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          print('验证码自动检索超时');
-        },
-        timeout: Duration(seconds: config.codeTimeout),
-      );
-
-      return null; // 需要等待用户输入验证码
-    } catch (e) {
-      print('手机号登录失败: $e');
-      rethrow;
-    }
-  }
-
-  /// 验证手机号验证码
-  Future<UserCredential> verifyPhoneNumber({
-    required String verificationId,
-    required String smsCode,
-  }) async {
-    try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: verificationId,
-        smsCode: smsCode,
-      );
-      return await _auth.signInWithCredential(credential);
-    } catch (e) {
-      print('验证码验证失败: $e');
+      Log.e('邮箱密码注册失败 / Email password sign-up failed', error: e);
       rethrow;
     }
   }
@@ -236,7 +218,7 @@ class FirebaseAuthService {
     try {
       return await _auth.signInAnonymously();
     } catch (e) {
-      print('匿名登录失败: $e');
+      Log.e('匿名登录失败 / Anonymous sign-in failed', error: e);
       rethrow;
     }
   }
@@ -245,28 +227,23 @@ class FirebaseAuthService {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
+      
+      // 同时退出第三方登录
+      await _googleProvider?.signOut();
+      await _facebookProvider?.signOut();
+      await _githubProvider?.signOut();
     } catch (e) {
-      print('退出登录失败: $e');
+      Log.e('退出登录失败 / Sign out failed', error: e);
       rethrow;
     }
   }
 
   /// 删除账户
-  Future<void> deleteAccount() async {
+  Future<void> deleteUser() async {
     try {
-      await currentUser?.delete();
+      await _auth.currentUser?.delete();
     } catch (e) {
-      print('删除账户失败: $e');
-      rethrow;
-    }
-  }
-
-  /// 发送密码重置邮件
-  Future<void> sendPasswordResetEmail(String email) async {
-    try {
-      await _auth.sendPasswordResetEmail(email: email);
-    } catch (e) {
-      print('发送密码重置邮件失败: $e');
+      Log.e('删除账户失败 / Delete user failed', error: e);
       rethrow;
     }
   }
@@ -277,56 +254,57 @@ class FirebaseAuthService {
     String? photoURL,
   }) async {
     try {
-      await currentUser?.updateDisplayName(displayName);
-      await currentUser?.updatePhotoURL(photoURL);
+      await _auth.currentUser?.updateDisplayName(displayName);
+      await _auth.currentUser?.updatePhotoURL(photoURL);
     } catch (e) {
-      print('更新用户资料失败: $e');
+      Log.e('更新用户资料失败 / Update user profile failed', error: e);
       rethrow;
     }
   }
 
   /// 更新邮箱
-  Future<void> updateEmail(String newEmail) async {
+  Future<void> updateEmail(String email) async {
     try {
-      await currentUser?.updateEmail(newEmail);
+      await _auth.currentUser?.updateEmail(email);
     } catch (e) {
-      print('更新邮箱失败: $e');
+      Log.e('更新邮箱失败 / Update email failed', error: e);
       rethrow;
     }
   }
 
   /// 更新密码
-  Future<void> updatePassword(String newPassword) async {
+  Future<void> updatePassword(String password) async {
     try {
-      await currentUser?.updatePassword(newPassword);
+      await _auth.currentUser?.updatePassword(password);
     } catch (e) {
-      print('更新密码失败: $e');
+      Log.e('更新密码失败 / Update password failed', error: e);
       rethrow;
     }
   }
 
-  /// 重新发送邮箱验证邮件
-  Future<void> sendEmailVerification() async {
+  /// 发送密码重置邮件
+  Future<void> sendPasswordResetEmail(String email) async {
     try {
-      await currentUser?.sendEmailVerification();
+      await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
-      print('发送邮箱验证邮件失败: $e');
+      Log.e('发送密码重置邮件失败 / Send password reset email failed', error: e);
       rethrow;
     }
   }
 
-  /// 检查邮箱是否已验证
-  bool get isEmailVerified => currentUser?.emailVerified ?? false;
-
-  /// 获取当前平台信息
-  Map<String, dynamic> getPlatformInfo() {
-    return {
-      'platform': PlatformDetector.platformName,
-      'isMobile': PlatformDetector.isMobile,
-      'isWeb': PlatformDetector.isWeb,
-      'isDesktop': PlatformDetector.isDesktop,
-      'supportsAppleSignIn': PlatformDetector.supportsFeature('apple_sign_in'),
-      'supportsPhoneAuth': PlatformDetector.supportsFeature('phone_auth'),
-    };
+  /// 验证密码重置代码
+  Future<void> confirmPasswordReset({
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      await _auth.confirmPasswordReset(
+        code: code,
+        newPassword: newPassword,
+      );
+    } catch (e) {
+      Log.e('验证密码重置代码失败 / Confirm password reset failed', error: e);
+      rethrow;
+    }
   }
 } 
