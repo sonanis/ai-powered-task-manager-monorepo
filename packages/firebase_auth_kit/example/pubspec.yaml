@@ -13,6 +13,10 @@ dependencies:
   firebase_core: ^2.0.0
   firebase_auth: ^4.0.0
   google_sign_in: ^6.0.0
+  flutter_facebook_auth: ^6.1.1
+  # GitHub 登录相关依赖
+  flutter_web_auth: ^0.5.0  # 用于 Web 平台的 OAuth 流程
+  http: ^1.1.0  # 用于 GitHub API 调用
   firebase_auth_kit:
     path: ../
 

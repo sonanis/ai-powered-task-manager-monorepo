@@ -4,12 +4,17 @@ import 'package:google_sign_in/google_sign_in.dart' as g;
 /// GoogleSignInProvider 的实际实现
 class MyGoogleSignInProvider implements GoogleSignInProvider {
   final g.GoogleSignIn _googleSignIn;
+  final String? _clientId;
 
   MyGoogleSignInProvider({String? clientId})
-      : _googleSignIn = g.GoogleSignIn(
+      : _clientId = clientId,
+        _googleSignIn = g.GoogleSignIn(
           clientId: clientId,
           scopes: ['email', 'profile'],
         );
+
+  /// 获取配置的 Client ID
+  String? get clientId => _clientId;
 
   @override
   Future<GoogleSignInAccount?> signIn() async {
