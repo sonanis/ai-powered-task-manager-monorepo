@@ -163,7 +163,11 @@ class Env {
     defaultValue: 'your-facebook-app-secret',
   );
   
-  /// 检查是否为开发环境 / Check if it's development environment
+  /// 检查是否使用默认配置值（开发环境）
+  /// Check if using default configuration values (development environment)
+  /// 
+  /// 注意：这个判断基于配置值是否为默认值，而不是应用是否在调试模式
+  /// Note: This check is based on whether configuration values are defaults, not whether the app is in debug mode
   static bool get isDevelopment {
     return firebaseWebApiKey == 'your-web-api-key' || 
            firebaseProjectId == 'your-project-id' ||

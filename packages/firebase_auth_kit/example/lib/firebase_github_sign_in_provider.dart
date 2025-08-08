@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth_kit/firebase_auth_kit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'config/env.dart';
 
 /// Firebase GitHub 登录提供者实现 / Firebase GitHub Sign-In Provider Implementation
 /// 
@@ -20,29 +19,27 @@ class FirebaseGitHubSignInProvider implements GitHubSignInProvider {
   late final GithubAuthProvider _githubProvider;
 
   /// 初始化 / Initialize
-  Future<void> initialize() async {
+  @override
+  Future<void> initialize(GitHubAuthConfig config) async {
     if (_isInitialized) return;
     
     try {
       _auth = FirebaseAuth.instance;
       _githubProvider = GithubAuthProvider();
       
-      // 设置 GitHub 提供者的自定义参数（可选）
+      // 设置 GitHub 提供者的自定义参数
       _githubProvider.addScope('read:user');
       _githubProvider.addScope('user:email');
       
-      // 设置 GitHub OAuth 配置（如果提供了环境变量）
-      if (!Env.isDevelopment) {
-        _githubProvider.setCustomParameters({
-          'client_id': Env.githubClientId,
-          'client_secret': Env.githubClientSecret,
-          'redirect_uri': Env.githubCallbackUrl,
-        });
-      }
+      // 设置 GitHub OAuth 配置
+      _githubProvider.setCustomParameters({
+        'client_id': config.clientId,
+        'client_secret': config.clientSecret,
+        if (config.redirectUri != null) 'redirect_uri': config.redirectUri!,
+      });
       
       _isInitialized = true;
     } catch (e) {
-      print('Firebase GitHub 登录初始化失败 / Firebase GitHub sign-in initialization failed: $e');
       throw Exception('Firebase GitHub 登录初始化失败: $e');
     }
   }
@@ -50,7 +47,9 @@ class FirebaseGitHubSignInProvider implements GitHubSignInProvider {
   @override
   Future<GitHubSignInAccount?> signIn() async {
     try {
-      await initialize();
+      if (!_isInitialized) {
+        throw Exception('GitHub 登录提供者未初始化，请先调用 initialize()');
+      }
       
       UserCredential? userCredential;
       
@@ -62,7 +61,7 @@ class FirebaseGitHubSignInProvider implements GitHubSignInProvider {
         userCredential = await _auth.signInWithProvider(_githubProvider);
       }
       
-      if (userCredential?.user != null) {
+      if (userCredential.user != null) {
         final user = userCredential.user!;
         final credential = userCredential.credential as OAuthCredential?;
         
@@ -91,7 +90,9 @@ class FirebaseGitHubSignInProvider implements GitHubSignInProvider {
   @override
   Future<GitHubSignInAccount?> signInSilently() async {
     try {
-      await initialize();
+      if (!_isInitialized) {
+        throw Exception('GitHub 登录提供者未初始化，请先调用 initialize()');
+      }
       
       // 检查是否已登录
       if (await isSignedIn()) {
@@ -108,7 +109,9 @@ class FirebaseGitHubSignInProvider implements GitHubSignInProvider {
   @override
   Future<void> signOut() async {
     try {
-      await initialize();
+      if (!_isInitialized) {
+        throw Exception('GitHub 登录提供者未初始化，请先调用 initialize()');
+      }
       
       // Firebase Auth 会自动处理退出登录
       // 如果需要，可以在这里添加额外的清理逻辑
@@ -121,7 +124,9 @@ class FirebaseGitHubSignInProvider implements GitHubSignInProvider {
   @override
   Future<GitHubSignInAccount?> getCurrentUser() async {
     try {
-      await initialize();
+      if (!_isInitialized) {
+        throw Exception('GitHub 登录提供者未初始化，请先调用 initialize()');
+      }
       
       final user = _auth.currentUser;
       if (user == null) {
@@ -161,7 +166,9 @@ class FirebaseGitHubSignInProvider implements GitHubSignInProvider {
   @override
   Future<bool> isSignedIn() async {
     try {
-      await initialize();
+      if (!_isInitialized) {
+        throw Exception('GitHub 登录提供者未初始化，请先调用 initialize()');
+      }
       
       final user = _auth.currentUser;
       if (user == null) {

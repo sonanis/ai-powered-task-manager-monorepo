@@ -1,8 +1,16 @@
+import '../../config/auth_platform_config.dart';
+
 /// Facebook 登录提供者接口 / Facebook Sign-In Provider Interface
 /// 
 /// 定义 Facebook 登录的标准接口，使用者可以实现自己的 Facebook 登录逻辑
 /// Define the standard interface for Facebook sign-in, allowing users to implement their own Facebook sign-in logic
 abstract class FacebookSignInProvider {
+  /// 初始化 Facebook 登录提供者 / Initialize Facebook Sign-In Provider
+  /// 
+  /// 使用配置初始化提供者，设置必要的参数
+  /// Initialize the provider with configuration, setting necessary parameters
+  Future<void> initialize(FacebookAuthConfig config);
+  
   /// 执行 Facebook 登录 / Perform Facebook sign-in
   /// 
   /// 返回 Facebook 用户账户，如果用户取消则返回 null

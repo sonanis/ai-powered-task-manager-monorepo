@@ -1,8 +1,16 @@
+import '../../config/auth_platform_config.dart';
+
 /// Google 登录提供者接口 / Google Sign-In Provider Interface
 /// 
 /// 定义 Google 登录的标准接口，使用者可以实现自己的 Google 登录逻辑
 /// Define the standard interface for Google sign-in, allowing users to implement their own Google sign-in logic
 abstract class GoogleSignInProvider {
+  /// 初始化 Google 登录提供者 / Initialize Google Sign-In Provider
+  /// 
+  /// 使用配置初始化提供者，设置必要的参数
+  /// Initialize the provider with configuration, setting necessary parameters
+  Future<void> initialize(GoogleAuthConfig config);
+  
   /// 执行 Google 登录 / Perform Google sign-in
   /// 
   /// 返回 Google 用户账户，如果用户取消则返回 null

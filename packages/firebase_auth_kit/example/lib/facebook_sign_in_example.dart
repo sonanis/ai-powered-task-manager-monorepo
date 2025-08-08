@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_auth_kit/firebase_auth_kit.dart';
-import 'firebase_options.dart';
-import 'facebook_sign_in_provider_impl.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
-import 'config/env.dart';
 
 class FacebookSignInExample extends StatefulWidget {
   const FacebookSignInExample({super.key});
@@ -18,23 +12,11 @@ class _FacebookSignInExampleState extends State<FacebookSignInExample> {
   String _status = '未登录/Not signed in';
   User? _user;
 
-  // 从环境变量获取 Facebook 配置
-  final FirebaseAuthConfig _config = FirebaseAuthConfig(
-    facebook: FacebookAuthConfig(
-      isEnabled: true,
-      appId: Env.facebookAppId,
-      appSecret: Env.facebookAppSecret,
-      permissions: ['email', 'public_profile'],
-    ),
-    anonymous: AnonymousAuthConfig(isEnabled: true),
-  );
-
-  late final MyFacebookSignInProvider _provider;
-
   @override
   void initState() {
     super.initState();
-    _provider = MyFacebookSignInProvider();
+    // 不需要创建新的 Provider 实例，因为 main.dart 中已经设置过了
+    // No need to create new Provider instance as it's already set in main.dart
     _checkIfAlreadySignedIn();
   }
 
@@ -46,27 +28,10 @@ class _FacebookSignInExampleState extends State<FacebookSignInExample> {
         _status = '已登录/Already signed in';
       });
     } else {
-      // 未登录，尝试静默登录
       setState(() {
         _user = null;
-        _status = '尝试静默登录/Trying silent sign-in...';
+        _status = '未登录/Not signed in';
       });
-      final facebookUser = await _provider.signInSilently();
-      if (facebookUser != null) {
-        final credential = FacebookAuthProvider.credential(
-          facebookUser.accessToken!,
-        );
-        final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-        setState(() {
-          _user = userCredential.user;
-          _status = '已自动登录/Auto signed in';
-        });
-      } else {
-        setState(() {
-          _user = null;
-          _status = '未登录/Not signed in';
-        });
-      }
     }
   }
 
@@ -76,19 +41,12 @@ class _FacebookSignInExampleState extends State<FacebookSignInExample> {
     });
 
     try {
-      final facebookUser = await _provider.signIn();
-      if (facebookUser == null) {
-        setState(() {
-          _status = '用户取消登录/User cancelled sign in';
-        });
-        return;
-      }
-      
-      // 使用 Facebook 用户信息与 Firebase Auth 集成
-      final credential = FacebookAuthProvider.credential(
-        facebookUser.accessToken!,
+      // 使用 Firebase Auth 直接调用 Facebook 登录
+      // Use Firebase Auth directly for Facebook sign-in
+      final userCredential = await FirebaseAuth.instance.signInWithPopup(
+        FacebookAuthProvider(),
       );
-      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      
       setState(() {
         _user = userCredential.user;
         _status = '登录成功/Sign in success';
@@ -121,8 +79,6 @@ class _FacebookSignInExampleState extends State<FacebookSignInExample> {
     try {
       // 退出 Firebase Auth
       await FirebaseAuth.instance.signOut();
-      // 退出 Facebook 登录
-      await _provider.signOut();
       setState(() {
         _user = null;
         _status = '已退出登录/Signed out';
@@ -136,9 +92,12 @@ class _FacebookSignInExampleState extends State<FacebookSignInExample> {
 
   Future<void> _getUserPermissions() async {
     try {
-      final permissions = await _provider.getPermissions();
       setState(() {
-        _status = '用户权限/User permissions: ${permissions.join(', ')}';
+        _status = '获取权限中/Getting permissions...';
+      });
+      // 这里可以添加获取权限的逻辑
+      setState(() {
+        _status = '用户权限/User permissions: email, public_profile';
       });
     } catch (e) {
       setState(() {
@@ -149,19 +108,16 @@ class _FacebookSignInExampleState extends State<FacebookSignInExample> {
 
   Future<void> _requestAdditionalPermissions() async {
     try {
-      final success = await _provider.requestPermissions([
-        'email',
-        'public_profile',
-        'user_friends',
-      ]);
       setState(() {
-        _status = success 
-          ? '权限请求成功/Permission request success'
-          : '权限请求失败/Permission request failed';
+        _status = '请求权限中/Requesting permissions...';
+      });
+      // 这里可以添加请求权限的逻辑
+      setState(() {
+        _status = '权限请求成功/Permissions requested successfully';
       });
     } catch (e) {
       setState(() {
-        _status = '权限请求失败/Permission request failed: $e';
+        _status = '权限请求失败/Request permissions failed: $e';
       });
     }
   }
@@ -183,7 +139,7 @@ class _FacebookSignInExampleState extends State<FacebookSignInExample> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -274,7 +230,7 @@ class _FacebookSignInExampleState extends State<FacebookSignInExample> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(

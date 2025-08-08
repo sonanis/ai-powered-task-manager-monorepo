@@ -1,8 +1,16 @@
+import '../../config/auth_platform_config.dart';
+
 /// GitHub 登录提供者接口 / GitHub Sign-In Provider Interface
 /// 
 /// 定义 GitHub 登录的标准接口，使用者可以实现自己的 GitHub 登录逻辑
 /// Define the standard interface for GitHub sign-in, allowing users to implement their own GitHub sign-in logic
 abstract class GitHubSignInProvider {
+  /// 初始化 GitHub 登录提供者 / Initialize GitHub Sign-In Provider
+  /// 
+  /// 使用配置初始化提供者，设置必要的参数
+  /// Initialize the provider with configuration, setting necessary parameters
+  Future<void> initialize(GitHubAuthConfig config);
+  
   /// 执行 GitHub 登录 / Perform GitHub sign-in
   /// 
   /// 返回 GitHub 用户账户，如果用户取消则返回 null

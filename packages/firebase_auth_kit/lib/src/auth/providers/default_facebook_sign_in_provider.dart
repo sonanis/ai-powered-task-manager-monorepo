@@ -1,37 +1,34 @@
 import 'facebook_sign_in_provider.dart';
+import '../../config/auth_platform_config.dart';
 import '../../core/logger.dart';
 
 /// 默认 Facebook 登录提供者实现 / Default Facebook Sign-In Provider Implementation
 /// 
-/// 使用 flutter_facebook_auth 插件实现 Facebook 登录功能
-/// Uses flutter_facebook_auth plugin to implement Facebook sign-in functionality
-class DefaultFacebookSignInProvider implements FacebookSignInProvider {
+/// 这是一个可选的便利实现，使用者可以选择使用或实现自己的版本
+/// This is an optional convenience implementation, users can choose to use it or implement their own version
+/// 
+/// 注意：这个实现需要在使用者的项目中添加 flutter_facebook_auth 依赖
+/// Note: This implementation requires adding flutter_facebook_auth dependency in the user's project
+abstract class DefaultFacebookSignInProvider implements FacebookSignInProvider {
   /// 是否已初始化 / Whether initialized
   bool _isInitialized = false;
   
-  /// 动态导入 flutter_facebook_auth / Dynamic import of flutter_facebook_auth
-  dynamic get _facebookAuth {
-    // 这里使用动态导入，避免在包中添加依赖
-    // Using dynamic import to avoid adding dependency to the package
-    try {
-      return _getFacebookAuthInstance();
-    } catch (e) {
-      throw Exception('flutter_facebook_auth 插件未安装，请添加依赖: flutter_facebook_auth: ^6.1.1');
-    }
-  }
-  
+  /// Facebook Auth 实例 / Facebook Auth instance
+  late final dynamic _facebookAuth;
+
   /// 获取 Facebook Auth 实例 / Get Facebook Auth instance
-  dynamic _getFacebookAuthInstance() {
-    // 这里需要使用者提供具体的实现
-    // Users need to provide specific implementation
-    throw UnimplementedError('需要实现 _getFacebookAuthInstance() 方法');
-  }
+  /// 
+  /// 这个方法需要由使用者实现，返回具体的 Facebook Auth 实例
+  /// This method needs to be implemented by users to return the specific Facebook Auth instance
+  dynamic _getFacebookAuthInstance();
 
   /// 初始化 / Initialize
-  Future<void> initialize() async {
+  @override
+  Future<void> initialize(FacebookAuthConfig config) async {
     if (_isInitialized) return;
     
     try {
+      _facebookAuth = _getFacebookAuthInstance();
       // 初始化 Facebook 登录
       await _facebookAuth.logOut();
       _isInitialized = true;
@@ -44,7 +41,9 @@ class DefaultFacebookSignInProvider implements FacebookSignInProvider {
   @override
   Future<FacebookSignInAccount?> signIn() async {
     try {
-      await initialize();
+      if (!_isInitialized) {
+        throw Exception('Facebook 登录提供者未初始化，请先调用 initialize()');
+      }
       
       // 执行 Facebook 登录
       final result = await _facebookAuth.login(
@@ -78,7 +77,9 @@ class DefaultFacebookSignInProvider implements FacebookSignInProvider {
   @override
   Future<FacebookSignInAccount?> signInSilently() async {
     try {
-      await initialize();
+      if (!_isInitialized) {
+        throw Exception('Facebook 登录提供者未初始化，请先调用 initialize()');
+      }
       
       // 检查是否已登录
       if (await isSignedIn()) {

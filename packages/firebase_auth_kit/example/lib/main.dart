@@ -6,6 +6,9 @@ import 'google_sign_in_example.dart';
 import 'facebook_sign_in_example.dart';
 import 'firebase_options.dart';
 import 'config/env.dart';
+import 'google_sign_in_provider_impl.dart';
+import 'facebook_sign_in_provider_impl.dart';
+import 'firebase_github_sign_in_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,8 +16,62 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
+  // 创建 Firebase Auth 配置
+  // Create Firebase Auth configuration
+  final authConfig = FirebaseAuthConfig(
+    // 在开发环境中，只启用不需要外部配置的平台
+    // In development environment, only enable platforms that don't require external configuration
+    google: GoogleAuthConfig(
+      isEnabled: true, 
+      webClientId: Env.googleWebClientId,
+      androidClientId: Env.googleAndroidClientId,
+      iosClientId: Env.googleIosClientId,
+    ),
+    facebook: FacebookAuthConfig(
+      isEnabled: false, // 暂时禁用，需要真实的 Facebook App 配置
+      appId: Env.facebookAppId,
+      appSecret: Env.facebookAppSecret,
+      permissions: ['email', 'public_profile'],
+    ),
+    github: GitHubAuthConfig(
+      isEnabled: true, 
+      clientId: Env.githubClientId,
+      clientSecret: Env.githubClientSecret,
+      redirectUri: Env.githubCallbackUrl,
+      scopes: ['read:user', 'user:email'],
+    ),
+    emailPassword: EmailPasswordAuthConfig(
+      isEnabled: true, // 启用邮箱密码登录
+      allowSignUp: true,
+      allowPasswordReset: true,
+      requireEmailVerification: false,
+    ),
+    anonymous: AnonymousAuthConfig(isEnabled: true), // 启用匿名登录
+  );
+  
+  // 打印配置信息用于调试
+  print('🔧 === Firebase Auth 配置调试信息 ===');
+  print('启用的平台: ${authConfig.google?.isEnabled == true ? 'Google' : ''} ${authConfig.facebook?.isEnabled == true ? 'Facebook' : ''} ${authConfig.github?.isEnabled == true ? 'GitHub' : ''} ${authConfig.emailPassword?.isEnabled == true ? 'EmailPassword' : ''} ${authConfig.anonymous?.isEnabled == true ? 'Anonymous' : ''}');
+  print('Google enabled: ${authConfig.google?.isEnabled}');
+  print('Facebook enabled: ${authConfig.facebook?.isEnabled}');
+  print('GitHub enabled: ${authConfig.github?.isEnabled}');
+  print('EmailPassword enabled: ${authConfig.emailPassword?.isEnabled}');
+  print('Anonymous enabled: ${authConfig.anonymous?.isEnabled}');
+  print('🔧 === 配置调试信息结束 ===');
+  
   // 初始化 Firebase Auth Kit
-  await FirebaseAuthKit.initialize();
+  // Initialize Firebase Auth Kit
+  await FirebaseAuthKit.initialize(config: authConfig);
+  
+  // 设置 Provider 实例（只设置启用的平台）
+  // Set up Provider instances (only for enabled platforms)
+  final authService = FirebaseAuthService.instance;
+  
+  // 注意：由于 Google、Facebook、GitHub 配置已禁用，暂时不设置这些 Provider
+  // Note: Since Google, Facebook, GitHub configurations are disabled, don't set these providers for now
+  authService.setGoogleProvider(MyGoogleSignInProvider());
+  authService.setFacebookProvider(MyFacebookSignInProvider());
+  authService.setGitHubProvider(FirebaseGitHubSignInProvider());
   
   runApp(const MyApp());
 }

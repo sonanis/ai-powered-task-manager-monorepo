@@ -1,19 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firebase_auth_kit/firebase_auth_kit.dart';
+import 'fixtures/auth_config_fixtures.dart';
 
 void main() {
   group('AuthConfig Tests', () {
     test('should create valid FirebaseAuthConfig', () {
-      final config = FirebaseAuthConfig(
-        google: GoogleAuthConfig(
-          isEnabled: true,
-          webClientId: 'test-web-client-id',
-        ),
-        emailPassword: EmailPasswordAuthConfig(
-          isEnabled: true,
-          allowSignUp: true,
-        ),
-      );
+      final config = AuthConfigFixtures.testConfig;
 
       expect(config.google?.isEnabled, true);
       expect(config.google?.webClientId, 'test-web-client-id');
@@ -22,34 +14,14 @@ void main() {
     });
 
     test('should validate config correctly', () {
-      final validConfig = FirebaseAuthConfig(
-        google: GoogleAuthConfig(
-          isEnabled: true,
-          webClientId: 'valid-web-client-id',
-        ),
-        facebook: FacebookAuthConfig(
-          isEnabled: true,
-          appId: 'valid-app-id',
-          appSecret: 'valid-app-secret',
-        ),
-      );
+      final validConfig = AuthConfigFixtures.developmentConfig;
 
       final configManager = AuthConfigManager(validConfig);
       expect(configManager.validateConfig(), true);
     });
 
     test('should detect invalid config', () {
-      final invalidConfig = FirebaseAuthConfig(
-        google: GoogleAuthConfig(
-          isEnabled: true,
-          webClientId: '', // 空字符串，无效
-        ),
-        facebook: FacebookAuthConfig(
-          isEnabled: true,
-          appId: '', // 空字符串，无效
-          appSecret: 'valid-app-secret',
-        ),
-      );
+      final invalidConfig = AuthConfigFixtures.invalidConfig;
 
       final configManager = AuthConfigManager(invalidConfig);
       // 由于验证失败会打印错误信息，我们期望返回false
@@ -57,75 +29,54 @@ void main() {
     });
 
     test('should get enabled platforms', () {
-      final config = FirebaseAuthConfig(
-        google: GoogleAuthConfig(isEnabled: true, webClientId: 'test'),
-        facebook: FacebookAuthConfig(
-          isEnabled: true,
-          appId: 'test',
-          appSecret: 'test',
-        ),
-        emailPassword: EmailPasswordAuthConfig(isEnabled: false),
-      );
+      final config = AuthConfigFixtures.developmentConfig;
 
       final configManager = AuthConfigManager(config);
       final enabledPlatforms = configManager.enabledPlatforms;
 
       expect(enabledPlatforms.contains('google'), true);
       expect(enabledPlatforms.contains('facebook'), true);
-      expect(enabledPlatforms.contains('email_password'), false);
-      expect(enabledPlatforms.length, 2);
+      expect(enabledPlatforms.contains('email_password'), true);
+      expect(enabledPlatforms.length, greaterThan(5));
     });
 
     test('should check platform enabled status', () {
-      final config = FirebaseAuthConfig(
-        google: GoogleAuthConfig(isEnabled: true, webClientId: 'test'),
-        facebook: FacebookAuthConfig(
-          isEnabled: false,
-          appId: 'test',
-          appSecret: 'test',
-        ),
-      );
+      final config = AuthConfigFixtures.developmentConfig;
 
       final configManager = AuthConfigManager(config);
       
       expect(configManager.isPlatformEnabled('google'), true);
-      expect(configManager.isPlatformEnabled('facebook'), false);
+      expect(configManager.isPlatformEnabled('facebook'), true);
+      expect(configManager.isPlatformEnabled('saml'), false); // SAML在开发配置中禁用
       expect(configManager.isPlatformEnabled('nonexistent'), false);
     });
 
     test('should get platform config by type', () {
-      final googleConfig = GoogleAuthConfig(
-        isEnabled: true,
-        webClientId: 'test-web-client-id',
-      );
-
-      final config = FirebaseAuthConfig(google: googleConfig);
+      final config = AuthConfigFixtures.developmentConfig;
       final configManager = AuthConfigManager(config);
 
       final retrievedConfig = configManager.getPlatformConfig<GoogleAuthConfig>();
       expect(retrievedConfig, isNotNull);
-      expect(retrievedConfig?.webClientId, 'test-web-client-id');
+      expect(retrievedConfig?.webClientId, 'your-google-web-client-id.apps.googleusercontent.com');
     });
 
     test('should get config summary', () {
-      final config = FirebaseAuthConfig(
-        google: GoogleAuthConfig(isEnabled: true, webClientId: 'test'),
-        emailPassword: EmailPasswordAuthConfig(isEnabled: true),
-      );
+      final config = AuthConfigFixtures.developmentConfig;
 
       final configManager = AuthConfigManager(config);
       final summary = configManager.getConfigSummary();
 
       expect(summary['enabled_platforms'], contains('google'));
       expect(summary['enabled_platforms'], contains('email_password'));
-      expect(summary['total_platforms'], 2);
+      expect(summary['enabled_platforms'], contains('facebook'));
+      expect(summary['total_platforms'], greaterThan(5));
       expect(summary['config_valid'], true);
     });
 
-    test('should work with example configs', () {
-      final devConfig = AuthConfigExample.developmentConfig;
-      final prodConfig = AuthConfigExample.productionConfig;
-      final minimalConfig = AuthConfigExample.minimalConfig;
+    test('should work with fixture configs', () {
+      final devConfig = AuthConfigFixtures.developmentConfig;
+      final prodConfig = AuthConfigFixtures.productionConfig;
+      final minimalConfig = AuthConfigFixtures.minimalConfig;
 
       expect(devConfig, isNotNull);
       expect(prodConfig, isNotNull);

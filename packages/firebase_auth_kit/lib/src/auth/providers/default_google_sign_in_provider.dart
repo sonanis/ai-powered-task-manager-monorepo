@@ -1,4 +1,5 @@
 import 'google_sign_in_provider.dart';
+import '../../config/auth_platform_config.dart';
 
 /// 默认 Google 登录提供者实现 / Default Google Sign-In Provider Implementation
 /// 
@@ -20,6 +21,16 @@ class DefaultGoogleSignInProvider implements GoogleSignInProvider {
     } catch (e) {
       return false;
     }
+  }
+
+  @override
+  Future<void> initialize(GoogleAuthConfig config) async {
+    throw UnimplementedError(
+      '默认 Google 登录提供者需要在使用者项目中添加 google_sign_in 依赖。'
+      '请实现自己的 GoogleSignInProvider 或添加 google_sign_in 依赖。'
+      'Default Google Sign-In Provider requires adding google_sign_in dependency in the user project. '
+      'Please implement your own GoogleSignInProvider or add google_sign_in dependency.'
+    );
   }
 
   @override

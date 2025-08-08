@@ -34,14 +34,14 @@ class AuthConfigManager {
       // 验证Google配置
       if (_config.google?.isEnabled == true) {
         if (_config.google!.webClientId.isEmpty) {
-          throw Exception('Google配置缺少webClientId');
+          throw Exception('Google配置缺少webClientId / Google configuration missing webClientId');
         }
       }
 
       // 验证Facebook配置
       if (_config.facebook?.isEnabled == true) {
         if (_config.facebook!.appId.isEmpty || _config.facebook!.appSecret.isEmpty) {
-          throw Exception('Facebook配置缺少appId或appSecret');
+          throw Exception('Facebook配置缺少appId或appSecret / Facebook configuration missing appId or appSecret');
         }
       }
 
@@ -50,42 +50,42 @@ class AuthConfigManager {
         if (_config.apple!.serviceId.isEmpty || 
             _config.apple!.teamId.isEmpty || 
             _config.apple!.keyId.isEmpty) {
-          throw Exception('Apple配置缺少必要参数');
+          throw Exception('Apple配置缺少必要参数 / Apple configuration missing required parameters');
         }
       }
 
       // 验证Twitter配置
       if (_config.twitter?.isEnabled == true) {
         if (_config.twitter!.apiKey.isEmpty || _config.twitter!.apiSecret.isEmpty) {
-          throw Exception('Twitter配置缺少apiKey或apiSecret');
+          throw Exception('Twitter配置缺少apiKey或apiSecret / Twitter configuration missing apiKey or apiSecret');
         }
       }
 
       // 验证GitHub配置
       if (_config.github?.isEnabled == true) {
         if (_config.github!.clientId.isEmpty || _config.github!.clientSecret.isEmpty) {
-          throw Exception('GitHub配置缺少clientId或clientSecret');
+          throw Exception('GitHub配置缺少clientId或clientSecret / GitHub configuration missing clientId or clientSecret');
         }
       }
 
       // 验证Microsoft配置
       if (_config.microsoft?.isEnabled == true) {
         if (_config.microsoft!.clientId.isEmpty || _config.microsoft!.clientSecret.isEmpty) {
-          throw Exception('Microsoft配置缺少clientId或clientSecret');
+          throw Exception('Microsoft配置缺少clientId或clientSecret / Microsoft configuration missing clientId or clientSecret');
         }
       }
 
       // 验证Yahoo配置
       if (_config.yahoo?.isEnabled == true) {
         if (_config.yahoo!.clientId.isEmpty || _config.yahoo!.clientSecret.isEmpty) {
-          throw Exception('Yahoo配置缺少clientId或clientSecret');
+          throw Exception('Yahoo配置缺少clientId或clientSecret / Yahoo configuration missing clientId or clientSecret');
         }
       }
 
       // 验证LinkedIn配置
       if (_config.linkedin?.isEnabled == true) {
         if (_config.linkedin!.clientId.isEmpty || _config.linkedin!.clientSecret.isEmpty) {
-          throw Exception('LinkedIn配置缺少clientId或clientSecret');
+          throw Exception('LinkedIn配置缺少clientId或clientSecret / LinkedIn configuration missing clientId or clientSecret');
         }
       }
 
@@ -95,7 +95,7 @@ class AuthConfigManager {
             _config.saml!.entityId.isEmpty || 
             _config.saml!.ssoUrl.isEmpty || 
             _config.saml!.x509Certificate.isEmpty) {
-          throw Exception('SAML配置缺少必要参数');
+          throw Exception('SAML配置缺少必要参数 / SAML configuration missing required parameters');
         }
       }
 
@@ -104,7 +104,7 @@ class AuthConfigManager {
         if (_config.oidc!.providerId.isEmpty || 
             _config.oidc!.clientId.isEmpty || 
             _config.oidc!.issuer.isEmpty) {
-          throw Exception('OIDC配置缺少必要参数');
+          throw Exception('OIDC配置缺少必要参数 / OIDC configuration missing required parameters');
         }
       }
 

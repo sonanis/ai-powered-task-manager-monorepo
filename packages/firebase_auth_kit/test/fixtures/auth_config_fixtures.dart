@@ -1,11 +1,14 @@
-import 'auth_platform_config.dart';
+import 'package:firebase_auth_kit/firebase_auth_kit.dart';
 
-/// Firebase Auth 配置示例
-class AuthConfigExample {
-  /// 获取开发环境配置示例
+/// Firebase Auth 配置测试数据 / Firebase Auth Configuration Test Fixtures
+/// 
+/// 提供用于测试的配置数据，包含不同环境的配置示例
+/// Provides configuration data for testing, including examples for different environments
+class AuthConfigFixtures {
+  /// 获取开发环境配置示例 / Get development environment configuration example
   static FirebaseAuthConfig get developmentConfig {
     return const FirebaseAuthConfig(
-      // Google登录配置
+      // Google登录配置 / Google Sign-In Configuration
       google: GoogleAuthConfig(
         isEnabled: true,
         webClientId: 'your-google-web-client-id.apps.googleusercontent.com',
@@ -14,7 +17,7 @@ class AuthConfigExample {
         serverClientId: 'your-google-server-client-id.apps.googleusercontent.com',
       ),
       
-      // Facebook登录配置
+      // Facebook登录配置 / Facebook Sign-In Configuration
       facebook: FacebookAuthConfig(
         isEnabled: true,
         appId: 'your-facebook-app-id',
@@ -22,7 +25,7 @@ class AuthConfigExample {
         permissions: ['email', 'public_profile'],
       ),
       
-      // Apple登录配置 (仅iOS 13+)
+      // Apple登录配置 (仅iOS 13+) / Apple Sign-In Configuration (iOS 13+ only)
       apple: AppleAuthConfig(
         isEnabled: true,
         serviceId: 'your-apple-service-id',
@@ -32,14 +35,14 @@ class AuthConfigExample {
         scopes: ['email', 'name'],
       ),
       
-      // Twitter登录配置
+      // Twitter登录配置 / Twitter Sign-In Configuration
       twitter: TwitterAuthConfig(
         isEnabled: true,
         apiKey: 'your-twitter-api-key',
         apiSecret: 'your-twitter-api-secret',
       ),
       
-      // GitHub登录配置
+      // GitHub登录配置 / GitHub Sign-In Configuration
       github: GitHubAuthConfig(
         isEnabled: true,
         clientId: 'your-github-client-id',
@@ -47,7 +50,7 @@ class AuthConfigExample {
         scopes: ['user:email', 'read:user'],
       ),
       
-      // Microsoft登录配置
+      // Microsoft登录配置 / Microsoft Sign-In Configuration
       microsoft: MicrosoftAuthConfig(
         isEnabled: true,
         clientId: 'your-microsoft-client-id',
@@ -56,14 +59,14 @@ class AuthConfigExample {
         scopes: ['user.read', 'email'],
       ),
       
-      // Yahoo登录配置
+      // Yahoo登录配置 / Yahoo Sign-In Configuration
       yahoo: YahooAuthConfig(
         isEnabled: true,
         clientId: 'your-yahoo-client-id',
         clientSecret: 'your-yahoo-client-secret',
       ),
       
-      // LinkedIn登录配置
+      // LinkedIn登录配置 / LinkedIn Sign-In Configuration
       linkedin: LinkedInAuthConfig(
         isEnabled: true,
         clientId: 'your-linkedin-client-id',
@@ -71,7 +74,7 @@ class AuthConfigExample {
         scopes: ['r_emailaddress', 'r_liteprofile'],
       ),
       
-      // 邮箱密码登录配置
+      // 邮箱密码登录配置 / Email Password Sign-In Configuration
       emailPassword: EmailPasswordAuthConfig(
         isEnabled: true,
         allowSignUp: true,
@@ -80,7 +83,7 @@ class AuthConfigExample {
         passwordMinLength: '6',
       ),
       
-      // 手机号登录配置
+      // 手机号登录配置 / Phone Number Sign-In Configuration
       phone: PhoneAuthConfig(
         isEnabled: true,
         codeTimeout: 60,
@@ -89,14 +92,14 @@ class AuthConfigExample {
         allowedCountryCodes: ['+86', '+1', '+44', '+81'],
       ),
       
-      // 匿名登录配置
+      // 匿名登录配置 / Anonymous Sign-In Configuration
       anonymous: AnonymousAuthConfig(
         isEnabled: true,
       ),
       
-      // SAML配置 (企业级)
+      // SAML配置 (企业级) / SAML Configuration (Enterprise)
       saml: SAMLAuthConfig(
-        isEnabled: false, // 开发环境通常不启用
+        isEnabled: false, // 开发环境通常不启用 / Usually disabled in development
         providerId: 'your-saml-provider-id',
         entityId: 'your-saml-entity-id',
         ssoUrl: 'https://your-saml-provider.com/sso',
@@ -104,9 +107,9 @@ class AuthConfigExample {
         displayName: 'SAML Provider',
       ),
       
-      // OIDC配置 (企业级)
+      // OIDC配置 (企业级) / OIDC Configuration (Enterprise)
       oidc: OIDCAuthConfig(
-        isEnabled: false, // 开发环境通常不启用
+        isEnabled: false, // 开发环境通常不启用 / Usually disabled in development
         providerId: 'your-oidc-provider-id',
         clientId: 'your-oidc-client-id',
         issuer: 'https://your-oidc-provider.com',
@@ -116,10 +119,10 @@ class AuthConfigExample {
     );
   }
 
-  /// 获取生产环境配置示例
+  /// 获取生产环境配置示例 / Get production environment configuration example
   static FirebaseAuthConfig get productionConfig {
     return const FirebaseAuthConfig(
-      // 生产环境通常只启用必要的平台
+      // 生产环境通常只启用必要的平台 / Production usually only enables necessary platforms
       google: GoogleAuthConfig(
         isEnabled: true,
         webClientId: 'your-production-google-web-client-id.apps.googleusercontent.com',
@@ -144,24 +147,24 @@ class AuthConfigExample {
         isEnabled: true,
         allowSignUp: true,
         allowPasswordReset: true,
-        requireEmailVerification: true, // 生产环境建议启用邮箱验证
+        requireEmailVerification: true, // 生产环境建议启用邮箱验证 / Recommended in production
         passwordMinLength: '8',
       ),
       
       phone: PhoneAuthConfig(
         isEnabled: true,
-        codeTimeout: 300, // 生产环境延长超时时间
+        codeTimeout: 300, // 生产环境延长超时时间 / Extended timeout in production
         codeLength: 6,
         defaultCountryCode: '+86',
       ),
       
       anonymous: AnonymousAuthConfig(
-        isEnabled: false, // 生产环境通常禁用匿名登录
+        isEnabled: false, // 生产环境通常禁用匿名登录 / Usually disabled in production
       ),
     );
   }
 
-  /// 获取最小配置示例 (仅启用基本功能)
+  /// 获取最小配置示例 (仅启用基本功能) / Get minimal configuration example (basic features only)
   static FirebaseAuthConfig get minimalConfig {
     return const FirebaseAuthConfig(
       google: GoogleAuthConfig(
@@ -176,77 +179,33 @@ class AuthConfigExample {
       ),
     );
   }
+
+  /// 获取无效配置示例 (用于测试验证) / Get invalid configuration example (for validation testing)
+  static FirebaseAuthConfig get invalidConfig {
+    return const FirebaseAuthConfig(
+      google: GoogleAuthConfig(
+        isEnabled: true,
+        webClientId: '', // 空字符串，无效 / Empty string, invalid
+      ),
+      facebook: FacebookAuthConfig(
+        isEnabled: true,
+        appId: '', // 空字符串，无效 / Empty string, invalid
+        appSecret: 'valid-app-secret',
+      ),
+    );
+  }
+
+  /// 获取测试配置示例 / Get test configuration example
+  static FirebaseAuthConfig get testConfig {
+    return const FirebaseAuthConfig(
+      google: GoogleAuthConfig(
+        isEnabled: true,
+        webClientId: 'test-web-client-id',
+      ),
+      emailPassword: EmailPasswordAuthConfig(
+        isEnabled: true,
+        allowSignUp: true,
+      ),
+    );
+  }
 }
-
-/// 配置使用说明
-class AuthConfigUsage {
-  /// 如何获取各平台的配置参数
-  
-  /// Google登录配置获取步骤：
-  /// 1. 访问 Google Cloud Console (https://console.cloud.google.com/)
-  /// 2. 创建或选择项目
-  /// 3. 启用 Google+ API
-  /// 4. 在"凭据"页面创建OAuth 2.0客户端ID
-  /// 5. 为不同平台创建客户端ID：
-  ///    - Web应用：webClientId
-  ///    - iOS应用：iosClientId  
-  ///    - Android应用：androidClientId
-  static String getGoogleConfigSteps() {
-    return '''
-Google登录配置步骤：
-1. 访问 Google Cloud Console
-2. 创建项目并启用 Google+ API
-3. 在"凭据"页面创建OAuth 2.0客户端ID
-4. 为不同平台创建客户端ID
-5. 在Firebase控制台配置Google登录提供商
-''';
-  }
-
-  /// Facebook登录配置获取步骤：
-  /// 1. 访问 Facebook Developers (https://developers.facebook.com/)
-  /// 2. 创建应用
-  /// 3. 获取App ID和App Secret
-  /// 4. 配置OAuth重定向URI
-  /// 5. 在Firebase控制台配置Facebook登录提供商
-  static String getFacebookConfigSteps() {
-    return '''
-Facebook登录配置步骤：
-1. 访问 Facebook Developers
-2. 创建应用并获取App ID和App Secret
-3. 配置OAuth重定向URI
-4. 在Firebase控制台配置Facebook登录提供商
-5. 添加必要的权限（email, public_profile）
-''';
-  }
-
-  /// Apple登录配置获取步骤：
-  /// 1. 访问 Apple Developer (https://developer.apple.com/)
-  /// 2. 创建App ID并启用Sign In with Apple
-  /// 3. 创建Service ID
-  /// 4. 生成私钥并获取Key ID
-  /// 5. 在Firebase控制台配置Apple登录提供商
-  static String getAppleConfigSteps() {
-    return '''
-Apple登录配置步骤：
-1. 访问 Apple Developer
-2. 创建App ID并启用Sign In with Apple
-3. 创建Service ID
-4. 生成私钥并获取Key ID和Team ID
-5. 在Firebase控制台配置Apple登录提供商
-注意：仅支持iOS 13+和macOS 10.15+
-''';
-  }
-
-  /// 安全注意事项
-  static String getSecurityNotes() {
-    return '''
-安全注意事项：
-1. 不要在代码中硬编码敏感信息（如clientSecret）
-2. 使用环境变量或安全的配置管理系统
-3. 定期轮换密钥和令牌
-4. 在生产环境中启用HTTPS
-5. 实施适当的错误处理和日志记录
-6. 遵循各平台的安全最佳实践
-''';
-  }
-} 

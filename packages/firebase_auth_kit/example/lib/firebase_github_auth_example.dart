@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth_kit/firebase_auth_kit.dart';
-import 'firebase_github_sign_in_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// Firebase GitHub 认证示例页面 / Firebase GitHub Auth Example Page
 /// 
-/// 展示如何使用 Firebase Auth Kit 实现 GitHub 认证
+/// 展示如何使用 Firebase Auth Kit 实现 GitHub 认证功能
 /// Demonstrates how to implement GitHub authentication using Firebase Auth Kit
 class FirebaseGitHubAuthExample extends StatefulWidget {
   const FirebaseGitHubAuthExample({super.key});
@@ -14,12 +14,6 @@ class FirebaseGitHubAuthExample extends StatefulWidget {
 }
 
 class _FirebaseGitHubAuthExampleState extends State<FirebaseGitHubAuthExample> {
-  /// Firebase Auth Kit 服务实例 / Firebase Auth Kit service instance
-  late final FirebaseAuthService _authService;
-  
-  /// GitHub 登录提供者 / GitHub sign-in provider
-  late final FirebaseGitHubSignInProvider _githubProvider;
-  
   /// 当前用户信息 / Current user information
   GitHubSignInAccount? _currentUser;
   
@@ -46,14 +40,9 @@ class _FirebaseGitHubAuthExampleState extends State<FirebaseGitHubAuthExample> {
         _errorMessage = null;
       });
 
-      // 初始化 Firebase Auth Kit 服务
-      _authService = FirebaseAuthService.instance;
-      
-      // 创建 GitHub 登录提供者
-      _githubProvider = FirebaseGitHubSignInProvider();
-      
-      // 设置 GitHub 提供者到 Auth 服务
-      _authService.setGitHubProvider(_githubProvider);
+      // 获取 Firebase Auth Kit 服务实例
+      // Get Firebase Auth Kit service instance
+      // _authService = FirebaseAuthService.instance; // This line was removed
       
       // 检查当前登录状态
       await _checkSignInStatus();
@@ -72,13 +61,41 @@ class _FirebaseGitHubAuthExampleState extends State<FirebaseGitHubAuthExample> {
   /// 检查登录状态 / Check sign-in status
   Future<void> _checkSignInStatus() async {
     try {
-      final isSignedIn = await _githubProvider.isSignedIn();
-      final currentUser = await _githubProvider.getCurrentUser();
-      
-      setState(() {
-        _isSignedIn = isSignedIn;
-        _currentUser = currentUser;
-      });
+      // 通过 Firebase Auth 检查登录状态
+      // Check sign-in status through Firebase Auth
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        // 检查是否通过 GitHub 登录
+        final providerData = currentUser.providerData;
+        final githubProvider = providerData.where((p) => p.providerId == 'github.com').firstOrNull;
+        
+        if (githubProvider != null) {
+          setState(() {
+            _isSignedIn = true;
+            _currentUser = GitHubSignInAccount(
+              id: currentUser.uid,
+              login: githubProvider.displayName ?? currentUser.displayName ?? 'unknown',
+              email: currentUser.email,
+              name: currentUser.displayName,
+              avatarUrl: currentUser.photoURL,
+              accessToken: null,
+              permissions: ['read:user', 'user:email'],
+              userData: {
+                'uid': currentUser.uid,
+                'email': currentUser.email,
+                'displayName': currentUser.displayName,
+                'photoURL': currentUser.photoURL,
+                'providerId': githubProvider.providerId,
+              },
+            );
+          });
+        }
+      } else {
+        setState(() {
+          _isSignedIn = false;
+          _currentUser = null;
+        });
+      }
     } catch (e) {
       setState(() {
         _errorMessage = '检查登录状态失败：$e';
@@ -94,22 +111,46 @@ class _FirebaseGitHubAuthExampleState extends State<FirebaseGitHubAuthExample> {
         _errorMessage = null;
       });
 
-      // 执行 GitHub 登录
-      final user = await _githubProvider.signIn();
+      // 使用 Firebase Auth 直接调用 GitHub 登录
+      // Use Firebase Auth directly for GitHub sign-in
+      final userCredential = await FirebaseAuth.instance.signInWithPopup(
+        GithubAuthProvider(),
+      );
       
-      if (user != null) {
-        setState(() {
-          _currentUser = user;
-          _isSignedIn = true;
-          _isLoading = false;
-        });
+      if (userCredential.user != null) {
+        final user = userCredential.user!;
+        final providerData = user.providerData;
+        final githubProvider = providerData.where((p) => p.providerId == 'github.com').firstOrNull;
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('登录成功！欢迎 ${user.login ?? '用户'}'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (githubProvider != null) {
+          setState(() {
+            _isSignedIn = true;
+            _currentUser = GitHubSignInAccount(
+              id: user.uid,
+              login: githubProvider.displayName ?? user.displayName ?? 'unknown',
+              email: user.email,
+              name: user.displayName,
+              avatarUrl: user.photoURL,
+              accessToken: null,
+              permissions: ['read:user', 'user:email'],
+              userData: {
+                'uid': user.uid,
+                'email': user.email,
+                'displayName': user.displayName,
+                'photoURL': user.photoURL,
+                'providerId': githubProvider.providerId,
+              },
+            );
+            _isLoading = false;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('登录成功！欢迎 ${_currentUser!.login}'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       } else {
         setState(() {
           _isLoading = false;
@@ -131,8 +172,6 @@ class _FirebaseGitHubAuthExampleState extends State<FirebaseGitHubAuthExample> {
     }
   }
 
-
-
   /// 退出登录 / Sign out
   Future<void> _signOut() async {
     try {
@@ -140,11 +179,8 @@ class _FirebaseGitHubAuthExampleState extends State<FirebaseGitHubAuthExample> {
         _isLoading = true;
       });
 
-      // 退出 GitHub 登录
-      await _githubProvider.signOut();
-      
       // 退出 Firebase 登录
-      await _authService.signOut();
+      await FirebaseAuth.instance.signOut();
       
       setState(() {
         _currentUser = null;
@@ -173,7 +209,8 @@ class _FirebaseGitHubAuthExampleState extends State<FirebaseGitHubAuthExample> {
         _isLoading = true;
       });
 
-      final permissions = await _githubProvider.getPermissions();
+      // 返回默认权限
+      final permissions = ['read:user', 'user:email'];
       
       setState(() {
         _isLoading = false;
@@ -273,7 +310,7 @@ class _FirebaseGitHubAuthExampleState extends State<FirebaseGitHubAuthExample> {
             ),
             if (_currentUser != null) ...[
               const SizedBox(height: 8),
-              Text('用户：${_currentUser!.login ?? '未知'}'),
+              Text('用户：${_currentUser!.login}'),
               if (_currentUser!.email != null) Text('邮箱：${_currentUser!.email}'),
             ],
           ],
@@ -390,7 +427,7 @@ class _FirebaseGitHubAuthExampleState extends State<FirebaseGitHubAuthExample> {
             
             // 用户信息
             _buildInfoRow('用户ID', _currentUser!.id),
-            _buildInfoRow('用户名', _currentUser!.login ?? '未知'),
+            _buildInfoRow('用户名', _currentUser!.login),
             _buildInfoRow('显示名称', _currentUser!.name ?? '未设置'),
             _buildInfoRow('邮箱', _currentUser!.email ?? '未提供'),
             _buildInfoRow('访问令牌', _currentUser!.accessToken != null ? '已获取' : '未获取'),

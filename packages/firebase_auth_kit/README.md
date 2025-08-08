@@ -46,6 +46,14 @@ final config = FirebaseAuthConfig(
     permissions: ['email', 'public_profile'],
   ),
   
+  github: GitHubAuthConfig(
+    isEnabled: true,
+    clientId: 'your-github-client-id',
+    clientSecret: 'your-github-client-secret',
+    redirectUri: 'your-github-callback-url',
+    scopes: ['read:user', 'user:email'],
+  ),
+  
   emailPassword: EmailPasswordAuthConfig(
     isEnabled: true,
     allowSignUp: true,
@@ -53,6 +61,9 @@ final config = FirebaseAuthConfig(
     requireEmailVerification: false,
   ),
 );
+
+// 初始化 Firebase Auth Kit
+await FirebaseAuthKit.initialize(config: config);
 ```
 
 ### 2. 使用配置管理器
@@ -79,6 +90,34 @@ if (configManager.isPlatformEnabled('google')) {
 
 // 获取特定平台配置
 final googleConfig = configManager.getPlatformConfig<GoogleAuthConfig>();
+```
+
+### 3. 在应用中使用
+
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // 初始化 Firebase Core
+  await Firebase.initializeApp();
+  
+  // 创建认证配置
+  final authConfig = FirebaseAuthConfig(
+    google: GoogleAuthConfig(
+      isEnabled: true,
+      webClientId: 'your-web-client-id',
+    ),
+    emailPassword: EmailPasswordAuthConfig(
+      isEnabled: true,
+      allowSignUp: true,
+    ),
+  );
+  
+  // 初始化 Firebase Auth Kit
+  await FirebaseAuthKit.initialize(config: authConfig);
+  
+  runApp(MyApp());
+}
 ```
 
 ## 🔐 支持的平台

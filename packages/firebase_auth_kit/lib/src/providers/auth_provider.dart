@@ -126,9 +126,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Google登录 / Sign in with Google
-  Future<void> signInWithGoogle({
-    required GoogleAuthConfig config,
-  }) async {
+  Future<void> signInWithGoogle() async {
     try {
       _updateState(_state.copyWith(
         status: UserStatus.authenticating,
@@ -137,7 +135,7 @@ class AuthProvider extends ChangeNotifier {
         provider: 'google',
       ));
 
-      await FirebaseAuthService.instance.signInWithGoogle(config: config);
+      await FirebaseAuthService.instance.signInWithGoogle();
 
       // 状态更新由监听器处理 / State update handled by listener
     } catch (e) {

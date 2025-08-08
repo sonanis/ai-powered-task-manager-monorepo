@@ -8,17 +8,22 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 class MyFacebookSignInProvider implements FacebookSignInProvider {
   /// 是否已初始化 / Whether initialized
   bool _isInitialized = false;
+  
+  /// 存储的配置 / Stored configuration
+  FacebookAuthConfig? _config;
 
   /// 初始化 / Initialize
-  Future<void> initialize() async {
+  @override
+  Future<void> initialize(FacebookAuthConfig config) async {
     if (_isInitialized) return;
     
     try {
+      _config = config;
+      
       // 初始化 Facebook 登录
       await FacebookAuth.instance.logOut();
       _isInitialized = true;
     } catch (e) {
-      print('Facebook 登录初始化失败 / Facebook sign-in initialization failed: $e');
       throw Exception('Facebook 登录初始化失败: $e');
     }
   }
@@ -26,11 +31,13 @@ class MyFacebookSignInProvider implements FacebookSignInProvider {
   @override
   Future<FacebookSignInAccount?> signIn() async {
     try {
-      await initialize();
+      if (!_isInitialized) {
+        throw Exception('Facebook 登录提供者未初始化，请先调用 initialize()');
+      }
       
       // 执行 Facebook 登录
       final result = await FacebookAuth.instance.login(
-        permissions: ['email', 'public_profile'],
+        permissions: _config?.permissions ?? ['email', 'public_profile'],
       );
       
       if (result.status == LoginStatus.success) {
@@ -60,7 +67,9 @@ class MyFacebookSignInProvider implements FacebookSignInProvider {
   @override
   Future<FacebookSignInAccount?> signInSilently() async {
     try {
-      await initialize();
+      if (!_isInitialized) {
+        throw Exception('Facebook 登录提供者未初始化，请先调用 initialize()');
+      }
       
       // 检查是否已登录
       if (await isSignedIn()) {
@@ -77,6 +86,10 @@ class MyFacebookSignInProvider implements FacebookSignInProvider {
   @override
   Future<void> signOut() async {
     try {
+      if (!_isInitialized) {
+        throw Exception('Facebook 登录提供者未初始化，请先调用 initialize()');
+      }
+      
       await FacebookAuth.instance.logOut();
     } catch (e) {
       print('Facebook 退出登录失败 / Facebook sign-out failed: $e');
@@ -86,6 +99,10 @@ class MyFacebookSignInProvider implements FacebookSignInProvider {
   @override
   Future<FacebookSignInAccount?> getCurrentUser() async {
     try {
+      if (!_isInitialized) {
+        throw Exception('Facebook 登录提供者未初始化，请先调用 initialize()');
+      }
+      
       if (!await isSignedIn()) {
         return null;
       }
@@ -111,6 +128,10 @@ class MyFacebookSignInProvider implements FacebookSignInProvider {
   @override
   Future<bool> isSignedIn() async {
     try {
+      if (!_isInitialized) {
+        throw Exception('Facebook 登录提供者未初始化，请先调用 initialize()');
+      }
+      
       // 使用 getUserData 来检查是否已登录
       await FacebookAuth.instance.getUserData();
       return true;
@@ -122,6 +143,10 @@ class MyFacebookSignInProvider implements FacebookSignInProvider {
   @override
   Future<List<String>> getPermissions() async {
     try {
+      if (!_isInitialized) {
+        throw Exception('Facebook 登录提供者未初始化，请先调用 initialize()');
+      }
+      
       if (!await isSignedIn()) {
         return [];
       }
@@ -137,6 +162,10 @@ class MyFacebookSignInProvider implements FacebookSignInProvider {
   @override
   Future<bool> requestPermissions(List<String> permissions) async {
     try {
+      if (!_isInitialized) {
+        throw Exception('Facebook 登录提供者未初始化，请先调用 initialize()');
+      }
+      
       final result = await FacebookAuth.instance.login(
         permissions: permissions,
       );
