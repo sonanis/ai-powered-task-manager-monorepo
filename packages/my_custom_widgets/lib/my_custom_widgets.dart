@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 export 'custom_widgets/collapse_table_widget.dart';
-export 'custom_widgets/popup_filter_widget.dart';
+export 'custom_widgets/popup_filter_widget/popup_filter_widget.dart';
+export 'custom_widgets/popup_filter_widget/filter_content_widget.dart';
 
 /// M3 按钮示例 / Material 3 Elevated Action Button
 class M3ActionButton extends StatelessWidget {
